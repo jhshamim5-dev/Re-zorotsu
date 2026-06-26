@@ -113,6 +113,32 @@ class MediaInfoFragment : Fragment() {
                 }
                 binding.mediaInfoMeanScore.text =
                     if (media.meanScore != null) (media.meanScore / 10.0).toString() else "??"
+                
+                binding.mediaInfoMalScore.text = "??"
+                if (media.idMAL != null) {
+                    val malId = media.idMAL!!
+                    lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        val score = ani.dantotsu.connections.jikan.JikanService.getAnimeScore(malId)
+                            ?: ani.dantotsu.connections.jikan.JikanService.getMangaScore(malId)
+                        if (score != null && score > 0) {
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                binding.mediaInfoMalScore.text = String.format("%.1f", score)
+                            }
+                        }
+                    }
+                    binding.mediaInfoMalLink.setSafeOnClickListener {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://myanimelist.net/anime/$malId"))
+                        val browserSelector = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("http://"))
+                        intent.selector = browserSelector
+                        try {
+                            startActivity(intent)
+                        } catch (e: Exception) {
+                            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://myanimelist.net/anime/$malId")))
+                        }
+                    }
+                } else {
+                    binding.mediaInfoMalScoreContainer.visibility = View.GONE
+                }
                 binding.mediaInfoStatus.text = media.status
                 binding.mediaInfoFormat.text = media.format
                 binding.mediaInfoSource.text = media.source
@@ -535,6 +561,36 @@ class MediaInfoFragment : Fragment() {
                                     )
                                 }
                             }
+                            parent.addView(root)
+                        }
+                    }
+
+                    if (media.anime != null) {
+                        ani.dantotsu.databinding.LayoutWatchOrderBinding.inflate(
+                            LayoutInflater.from(context),
+                            parent,
+                            false
+                        ).apply {
+                            val bannerOrCover = media.banner ?: media.cover
+                            watchOrderReleaseImage.loadImage(bannerOrCover)
+                            watchOrderChronologicalImage.loadImage(bannerOrCover)
+
+                            watchOrderReleaseCard.setSafeOnClickListener {
+                                WatchOrderBottomSheet.newInstance(
+                                    getString(R.string.release_order),
+                                    media.id,
+                                    true
+                                ).show(childFragmentManager, "watch_order_release")
+                            }
+
+                            watchOrderChronologicalCard.setSafeOnClickListener {
+                                WatchOrderBottomSheet.newInstance(
+                                    getString(R.string.recommended_order),
+                                    media.id,
+                                    false
+                                ).show(childFragmentManager, "watch_order_chronological")
+                            }
+
                             parent.addView(root)
                         }
                     }

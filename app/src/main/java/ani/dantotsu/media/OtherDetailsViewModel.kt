@@ -55,7 +55,7 @@ class OtherDetailsViewModel : ViewModel() {
                 val idList = idMap.getOrPut(dateInfo) { mutableListOf() }
                 // Store the airing timestamp for countdown display
                 it.airingAtTimestamp = v[1]
-                it.relation = "Episode ${v[0]}"
+                it.relation = "Ep ${v[0]}"
                 if (!idList.contains(it.id)) {
                     idList.add(it.id)
                     list.add(it)

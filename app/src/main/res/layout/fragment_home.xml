@@ -182,16 +182,7 @@
                             android:clipChildren="false"
                             android:clipToPadding="false">
 
-                            <!-- Supporter Glow Ring (behind avatar) -->
-                            <View
-                                android:id="@+id/homeSupporterGlow"
-                                android:layout_width="62dp"
-                                android:layout_height="62dp"
-                                android:layout_gravity="center"
-                                android:layout_marginTop="4dp"
-                                android:background="@drawable/supporter_glow_ring"
-                                android:visibility="gone"
-                                tools:visibility="visible" />
+
 
                             <com.google.android.material.card.MaterialCardView
                                 android:id="@+id/homeUserAvatarContainer"
@@ -229,17 +220,7 @@
                                 tools:text="1"
                                 tools:visibility="visible" />
 
-                            <ImageView
-                                android:id="@+id/homeSupporterBadge"
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:layout_gravity="start|top"
-                                android:layout_marginStart="0dp"
-                                android:layout_marginTop="0dp"
-                                android:src="@drawable/ic_supporter_badge"
-                                android:visibility="gone"
-                                tools:ignore="ContentDescription"
-                                tools:visibility="visible" />
+
                         </FrameLayout>
 
                     </LinearLayout>

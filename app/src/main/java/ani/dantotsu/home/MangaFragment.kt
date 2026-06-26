@@ -103,7 +103,7 @@ class MangaFragment : Fragment() {
                 sort = Anilist.sortBy[1]
             )
         }
-        val popularAdaptor = MediaAdaptor(1, model.aniMangaSearchResults.results, requireActivity())
+        val popularAdaptor = MediaAdaptor(1, model.aniMangaSearchResults.results, requireActivity(), showCountdown = true)
         val progressAdaptor = ProgressAdapter(searched = model.searched)
         binding.mangaPageRecyclerView.adapter =
             ConcatAdapter(mangaPageAdapter, popularAdaptor, progressAdaptor)
@@ -164,13 +164,13 @@ class MangaFragment : Fragment() {
             if (i == true) {
                 model.getPopularNovel().observe(viewLifecycleOwner) {
                     if (it != null) {
-                        mangaPageAdapter.updateNovel(MediaAdaptor(0, it, requireActivity()), it)
+                        mangaPageAdapter.updateNovel(MediaAdaptor(0, it, requireActivity(), showCountdown = true), it)
                     }
                 }
                 model.getPopularManga().observe(viewLifecycleOwner) {
                     if (it != null) {
                         mangaPageAdapter.updateTrendingManga(
-                            MediaAdaptor(0, it, requireActivity()),
+                            MediaAdaptor(0, it, requireActivity(), showCountdown = true),
                             it
                         )
                     }
@@ -181,19 +181,20 @@ class MangaFragment : Fragment() {
                             MediaAdaptor(
                                 0,
                                 it,
-                                requireActivity()
+                                requireActivity(),
+                                showCountdown = true
                             ), it
                         )
                     }
                 }
                 model.getTopRated().observe(viewLifecycleOwner) {
                     if (it != null) {
-                        mangaPageAdapter.updateTopRated(MediaAdaptor(0, it, requireActivity()), it)
+                        mangaPageAdapter.updateTopRated(MediaAdaptor(0, it, requireActivity(), showCountdown = true), it)
                     }
                 }
                 model.getMostFav().observe(viewLifecycleOwner) {
                     if (it != null) {
-                        mangaPageAdapter.updateMostFav(MediaAdaptor(0, it, requireActivity()), it)
+                        mangaPageAdapter.updateMostFav(MediaAdaptor(0, it, requireActivity(), showCountdown = true), it)
                     }
                 }
                 if (mangaPageAdapter.trendingViewPager != null) {
@@ -205,7 +206,8 @@ class MangaFragment : Fragment() {
                                     if (PrefManager.getVal(PrefName.SmallView)) 3 else 2,
                                     it,
                                     requireActivity(),
-                                    viewPager = mangaPageAdapter.trendingViewPager
+                                    viewPager = mangaPageAdapter.trendingViewPager,
+                                    showCountdown = true
                                 )
                             )
                             mangaPageAdapter.updateAvatar()

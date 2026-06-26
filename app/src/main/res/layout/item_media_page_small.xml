@@ -108,6 +108,31 @@
 
                     </LinearLayout>
 
+                    <!-- Countdown Timer overlay -->
+                    <TextView
+                        android:id="@+id/itemCompactCountdown"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|center_horizontal"
+                        android:layout_marginTop="6dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_countdown_pill"
+                        android:ellipsize="end"
+                        android:fontFamily="@font/poppins_semi_bold"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:paddingStart="8dp"
+                        android:paddingTop="3dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="3dp"
+                        android:drawablePadding="5dp"
+                        android:textColor="#FFFFFF"
+                        android:textSize="9sp"
+                        android:visibility="gone"
+                        tools:text="Ep 5 • 2d 5h 30m"
+                        tools:visibility="visible" />
+
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView

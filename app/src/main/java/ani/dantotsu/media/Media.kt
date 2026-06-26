@@ -118,11 +118,18 @@ data class Media(
         timeUntilAiring = apiMedia.nextAiringEpisode?.timeUntilAiring?.let { it.toLong() * 1000 },
         anime = if (apiMedia.type == MediaType.ANIME) Anime(
             totalEpisodes = apiMedia.episodes,
-            nextAiringEpisode = apiMedia.nextAiringEpisode?.episode?.minus(1)
+            nextAiringEpisode = apiMedia.nextAiringEpisode?.episode?.minus(1),
+            nextAiringEpisodeTime = apiMedia.nextAiringEpisode?.airingAt?.toLong()
         ) else null,
         manga = if (apiMedia.type == MediaType.MANGA) Manga(totalChapters = apiMedia.chapters) else null,
         format = apiMedia.format?.toString(),
-    )
+        airingAtTimestamp = apiMedia.nextAiringEpisode?.airingAt?.toLong(),
+    ) {
+        apiMedia.tags?.forEach { i ->
+            if (i.isMediaSpoiler != true)
+                this.tags.add("${i.name} : ${i.rank.toString()}%")
+        }
+    }
 
     constructor(mediaList: MediaList) : this(mediaList.media!!) {
         this.userProgress = mediaList.progress

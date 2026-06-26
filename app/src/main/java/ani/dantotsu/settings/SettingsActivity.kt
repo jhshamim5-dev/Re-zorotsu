@@ -190,14 +190,14 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
 
-            settingBuyMeCoffee.setOnClickListener {
+            settingPatreon.setOnClickListener {
                 lifecycleScope.launch {
                     it.pop()
                 }
-                DonateBottomSheet.newInstance().show(supportFragmentManager, "donate")
+                openLinkInBrowser(getString(R.string.coffee))
             }
             lifecycleScope.launch {
-                settingBuyMeCoffee.pop()
+                settingPatreon.pop()
             }
 
             loginDiscord.setOnClickListener {
@@ -259,7 +259,7 @@ class SettingsActivity : AppCompatActivity() {
                             }
 
                             setPositiveButton(this@SettingsActivity.getString(R.string.donate)) {
-                                settingBuyMeCoffee.performClick()
+                                settingPatreon.performClick()
                                 dismiss()
                             }
                             show(supportFragmentManager, "dialog")

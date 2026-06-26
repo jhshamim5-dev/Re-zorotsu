@@ -617,17 +617,7 @@ class MainActivity : AppCompatActivity() {
 
                 return
             }
-            if (uri.scheme == "redantotsu" && uri.host == "payment-success") {
-                PrefManager.setVal(PrefName.IsSupporter, true)
-                PrefManager.setCustomVal("supporter_date", System.currentTimeMillis())
-                customAlertDialog().apply {
-                    setTitle("Thank You!")
-                    setMessage("Your support effectively helps keep ReDantotsu alive. You now have a supporter badge!")
-                    setPosButton("Awesome") { }
-                    show()
-                }
-                return
-            }
+
             if (intent.type == null) return
             val jsonString =
                 contentResolver.openInputStream(uri)?.readBytes()

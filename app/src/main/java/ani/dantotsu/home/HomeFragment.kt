@@ -97,10 +97,7 @@ class HomeFragment : Fragment() {
                         && PrefManager.getVal<Boolean>(PrefName.ShowNotificationRedDot) == true
                 binding.homeNotificationCount.text = Anilist.unreadNotificationCount.toString()
 
-                // Show supporter badge and glow if user is a supporter
-                val isSupporter: Boolean = PrefManager.getVal(PrefName.IsSupporter)
-                binding.homeSupporterBadge.isVisible = isSupporter
-                binding.homeSupporterGlow.isVisible = isSupporter
+
                 binding.homeAnimeList.setOnClickListener {
                     ContextCompat.startActivity(
                         requireActivity(), Intent(requireActivity(), ListActivity::class.java)
@@ -247,7 +244,7 @@ class HomeFragment : Fragment() {
                 empty.visibility = View.GONE
                 if (it != null) {
                     if (it.isNotEmpty()) {
-                        recyclerView.adapter = MediaAdaptor(0, it, requireActivity())
+                        recyclerView.adapter = MediaAdaptor(0, it, requireActivity(), showCountdown = true)
                         recyclerView.layoutManager = LinearLayoutManager(
                             requireContext(),
                             LinearLayoutManager.HORIZONTAL,
@@ -401,7 +398,7 @@ class HomeFragment : Fragment() {
             if (it != null) {
                 if (it.isNotEmpty()) {
                     binding.homeHiddenItemsRecyclerView.adapter =
-                        MediaAdaptor(0, it, requireActivity())
+                        MediaAdaptor(0, it, requireActivity(), showCountdown = true)
                     binding.homeHiddenItemsRecyclerView.layoutManager = LinearLayoutManager(
                         requireContext(),
                         LinearLayoutManager.HORIZONTAL,

@@ -538,6 +538,7 @@ data class MediaListCollection(
 data class FollowData(
     @SerialName("id") var id: Int,
     @SerialName("isFollowing") var isFollowing: Boolean,
+    @SerialName("isFollower") var isFollower: Boolean? = null,
 ) : java.io.Serializable
 
 @Serializable

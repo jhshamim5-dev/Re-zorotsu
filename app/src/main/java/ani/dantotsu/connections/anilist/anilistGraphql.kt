@@ -429,3 +429,80 @@ fun fullMediaInformation(id: Int) = """
 }
 
 """.prepare()
+
+val watchOrderRelationsQuery = """
+  query(${'$'}id: Int) {
+    Media(id: ${'$'}id, type: ANIME) {
+      id
+      idMal
+      type
+      isFavourite
+      title { romaji english userPreferred }
+      startDate { year month day }
+      format
+      episodes
+      chapters
+      coverImage { medium large }
+      mediaListEntry { status }
+      tags {
+        name
+        isMediaSpoiler
+        rank
+      }
+      relations {
+        edges {
+          relationType(version: 2)
+          node {
+            id
+            idMal
+            type
+            isFavourite
+            title { romaji english userPreferred }
+            startDate { year month day }
+            format
+            episodes
+            chapters
+            coverImage { medium large }
+            mediaListEntry { status }
+            tags {
+              name
+              isMediaSpoiler
+              rank
+            }
+          }
+        }
+      }
+    }
+  }
+""".prepare()
+
+val watchOrderListQuery = """
+  query(${'$'}ids: [Int]) {
+    Page(page: 1, perPage: 50) {
+      media(id_in: ${'$'}ids) {
+        id
+        type
+        isFavourite
+        isAdult
+        title { romaji english userPreferred }
+        startDate { year month day }
+        format
+        episodes
+        chapters
+        coverImage { medium large }
+        bannerImage
+        meanScore
+        popularity
+        status(version: 2)
+        idMal
+        nextAiringEpisode { episode }
+        mediaListEntry { status }
+        tags {
+          name
+          isMediaSpoiler
+          rank
+        }
+      }
+    }
+  }
+""".prepare()

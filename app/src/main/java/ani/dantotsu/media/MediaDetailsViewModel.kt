@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import ani.dantotsu.R
 import ani.dantotsu.connections.anilist.Anilist
 import ani.dantotsu.currContext
@@ -372,4 +373,93 @@ class MediaDetailsViewModel : ViewModel() {
 
     private val novelChapter = MutableLiveData<MangaChapter?>(null)
     fun getNovelChapter(): LiveData<MangaChapter?> = novelChapter
+
+    val releaseWatchOrder = MutableLiveData<List<WatchOrderNode>>(emptyList())
+    val recommendedWatchOrder = MutableLiveData<List<WatchOrderNode>>(emptyList())
+    val releaseWatchOrderSource = MutableLiveData<String>("AniList")
+    val recommendedWatchOrderSource = MutableLiveData<String>("AniList")
+    val isLoadingWatchOrder = MutableLiveData(false)
+    val activeWatchOrderTab = MutableLiveData(0) // 0 for Release, 1 for Recommended
+
+    fun loadWatchOrder(mediaId: Int) {
+        if (releaseWatchOrder.value?.isNotEmpty() == true || recommendedWatchOrder.value?.isNotEmpty() == true || isLoadingWatchOrder.value == true) return
+        isLoadingWatchOrder.postValue(true)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val currMedia = media.value
+                val malId = currMedia?.idMAL
+                
+                // 1. Fetch Chiaki Release Order
+                var chiakiList: List<WatchOrderNode> = emptyList()
+                var releaseSource = "AniList"
+                if (malId != null) {
+                    chiakiList = ani.dantotsu.others.ChiakiScraper.getWatchOrder(malId)
+                    if (chiakiList.isNotEmpty()) {
+                        releaseSource = "Chiaki"
+                    }
+                }
+                
+                // Fallback to AniList only if Chiaki is missing
+                var anilistList: List<WatchOrderNode> = emptyList()
+                if (chiakiList.isEmpty()) {
+                    val rawAnilistList = ani.dantotsu.connections.anilist.AnilistQueries().getWatchOrderFranchise(mediaId)
+                    anilistList = rawAnilistList.filter { 
+                        it.format != "MUSIC" && it.format != "MANGA" && it.format != "NOVEL" && it.format != "ONE_SHOT" 
+                    }.sortedBy { it.startDate }.map {
+                        WatchOrderNode(
+                            title = it.userPreferredName,
+                            coverUrl = it.cover ?: it.banner,
+                            formatYear = listOf(it.format?.replace("_", " ") ?: "", it.startDate?.year?.toString() ?: "").filter { it.isNotEmpty() }.joinToString(" • "),
+                            malId = it.idMAL,
+                            anilistId = it.id
+                        )
+                    }
+                    chiakiList = anilistList
+                    releaseSource = "AniList"
+                }
+                
+                // 2. Fetch Reddit Recommended Order
+                var recommendedList: List<WatchOrderNode> = emptyList()
+                var recommendedSource = "AniList"
+                if (malId != null) {
+                    val redditMalIds = ani.dantotsu.others.RedditScraper.getWatchOrder(malId)
+                    if (redditMalIds.isNotEmpty()) {
+                        val mapped = mutableListOf<WatchOrderNode>()
+                        for (rMalId in redditMalIds) {
+                            // First try to map from Chiaki
+                            var match = chiakiList.find { it.malId == rMalId }
+                            // If missing from Chiaki, we could fallback, but we'll just skip or add a dummy node if we really want to.
+                            // However, Chiaki's franchise list is usually comprehensive.
+                            if (match != null) {
+                                mapped.add(match)
+                            }
+                        }
+                        if (mapped.isNotEmpty()) {
+                            recommendedList = mapped
+                            recommendedSource = "Reddit"
+                        }
+                    }
+                }
+                
+                if (recommendedList.isEmpty()) {
+                    if (chiakiList.isNotEmpty() && releaseSource == "Chiaki") {
+                        recommendedList = chiakiList
+                        recommendedSource = "Chiaki"
+                    } else {
+                        recommendedList = anilistList
+                        recommendedSource = "AniList"
+                    }
+                }
+                
+                releaseWatchOrderSource.postValue(releaseSource)
+                recommendedWatchOrderSource.postValue(recommendedSource)
+                releaseWatchOrder.postValue(chiakiList)
+                recommendedWatchOrder.postValue(recommendedList)
+            } catch (e: Exception) {
+                ani.dantotsu.util.Logger.log("Error loading watch order: ${e.message}")
+            } finally {
+                isLoadingWatchOrder.postValue(false)
+            }
+        }
+    }
 }

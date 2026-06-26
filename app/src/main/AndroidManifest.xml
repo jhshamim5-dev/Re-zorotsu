@@ -294,7 +294,7 @@
 
                 <data
                     android:host="mal"
-                    android:scheme="dantotsu" />
+                    android:scheme="redantotsu" />
             </intent-filter>
         </activity>
         <activity
@@ -309,10 +309,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="dantotsu" />
+                <data android:scheme="redantotsu" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
-                <data android:host="discord.dantotsu.com" />
+                <data android:host="discord.redantotsu.com" />
             </intent-filter>
         </activity>
         <activity
@@ -327,10 +327,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="dantotsu" />
+                <data android:scheme="redantotsu" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
-                <data android:host="discord.dantotsu.com" />
+                <data android:host="discord.redantotsu.com" />
             </intent-filter>
         </activity>
         <activity

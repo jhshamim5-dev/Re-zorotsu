@@ -46,11 +46,18 @@ class Login : AppCompatActivity() {
                     view?.postDelayed({
                         view.evaluateJavascript(
                             """
-                    (function() {
-                        const wreq = (webpackChunkdiscord_app.push([[''],{},e=>{m=[];for(let c in e.c)m.push(e.c[c])}]),m).find(m=>m?.exports?.default?.getToken!==void 0).exports.default.getToken();
-                        return wreq;
-                    })()
-                """.trimIndent()
+                            (function() {
+                                try {
+                                    const iframe = document.createElement('iframe');
+                                    document.head.append(iframe);
+                                    const token = iframe.contentWindow.localStorage.token || iframe.contentWindow.localStorage.getItem('token');
+                                    iframe.remove();
+                                    return token;
+                                } catch (e) {
+                                    return null;
+                                }
+                            })()
+                            """.trimIndent()
                         ) { result ->
                             login(result.trim('"'))
                         }

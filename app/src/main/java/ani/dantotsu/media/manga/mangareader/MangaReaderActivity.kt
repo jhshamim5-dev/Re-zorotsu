@@ -690,13 +690,14 @@ class MangaReaderActivity : AppCompatActivity() {
                     RecyclerView.HORIZONTAL,
                 directionRLBT
             )
-            manager.preloadItemCount = 5
+            manager.preloadItemCount = 6
 
             binding.mangaReaderPager.visibility = View.GONE
 
             binding.mangaReaderRecycler.apply {
                 clearOnScrollListeners()
                 binding.mangaReaderSwipy.child = this
+                setItemViewCacheSize(6)
                 adapter = imageAdapter
                 layoutManager = manager
                 setOnTouchListener { _, event ->
@@ -772,7 +773,7 @@ class MangaReaderActivity : AppCompatActivity() {
                         ViewPager2.ORIENTATION_HORIZONTAL
                     else ViewPager2.ORIENTATION_VERTICAL
                 registerOnPageChangeCallback(pageChangeCallback)
-                offscreenPageLimit = 5
+                offscreenPageLimit = 6
 
                 setCurrentItem(currentPage / (dualPage { 2 } ?: 1) - 1, false)
             }

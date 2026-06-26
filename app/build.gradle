@@ -18,8 +18,8 @@ android {
         applicationId "app.redantotsu.asr"
         minSdk 23
         targetSdk 35
-        versionName "1.0.6"
-        versionCode 100000006
+        versionName "1.0.7"
+        versionCode 100000007
         signingConfig signingConfigs.debug
 
     }
@@ -44,16 +44,16 @@ android {
         alpha {
             // applicationIdSuffix ".beta" // Removed to match exact Firebase package
             versionNameSuffix ""
-            manifestPlaceholders.icon_placeholder = "@mipmap/ic_launcher_alpha"
-            manifestPlaceholders.icon_placeholder_round = "@mipmap/ic_launcher_alpha_round"
+            manifestPlaceholders.icon_placeholder = "@mipmap/ic_launcher"
+            manifestPlaceholders.icon_placeholder_round = "@mipmap/ic_launcher_round"
             debuggable System.getenv("CI") == null
             isDefault true
         }
         debug {
             // applicationIdSuffix ".beta"
             versionNameSuffix "-beta01"
-            manifestPlaceholders.icon_placeholder = "@mipmap/ic_launcher_beta"
-            manifestPlaceholders.icon_placeholder_round = "@mipmap/ic_launcher_beta_round"
+            manifestPlaceholders.icon_placeholder = "@mipmap/ic_launcher"
+            manifestPlaceholders.icon_placeholder_round = "@mipmap/ic_launcher_round"
             debuggable false
         }
         release {
@@ -133,7 +133,7 @@ dependencies {
     implementation 'jp.wasabeef:glide-transformations:4.3.0'
 
 //  Exoplayer
-    ext.exo_version = '1.5.0'
+    ext.exo_version = '1.9.4'
     implementation "androidx.media3:media3-exoplayer:$exo_version"
     implementation "androidx.media3:media3-ui:$exo_version"
     implementation "androidx.media3:media3-exoplayer-hls:$exo_version"

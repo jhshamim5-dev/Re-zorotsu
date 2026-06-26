@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
@@ -46,6 +47,7 @@ class MediaAdaptor(
     private val matchParent: Boolean = false,
     private val viewPager: ViewPager2? = null,
     private val fav: Boolean = false,
+    private val showCountdown: Boolean = false,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -117,37 +119,17 @@ class MediaAdaptor(
                                     ?: JikanService.getMangaScore(malId)
                                 if (score != null && score > 0) {
                                     media.malScore = score
-                                    b.itemCompactMalScoreBG.visibility = View.VISIBLE
-                                    b.itemCompactMalScore.text = String.format("%.1f", score)
+                                    if (holder.bindingAdapterPosition != RecyclerView.NO_POSITION && mediaList?.getOrNull(holder.bindingAdapterPosition)?.id == media.id) {
+                                        b.itemCompactMalScoreBG.visibility = View.VISIBLE
+                                        b.itemCompactMalScore.text = String.format("%.1f", score)
+                                    }
                                 }
                             }
                         }
                     }
                     
-                    // Countdown Timer for Calendar items
-                    if (media.airingAtTimestamp != null && media.airingAtTimestamp!! > 0) {
-                        val currentTime = System.currentTimeMillis() / 1000
-                        val airingAt = media.airingAtTimestamp!!
-                        if (airingAt > currentTime) {
-                            b.itemCompactCountdown.visibility = View.VISIBLE
-                            val diff = airingAt - currentTime
-                            val days = diff / 86400
-                            val hours = (diff % 86400) / 3600
-                            val minutes = (diff % 3600) / 60
-                            val countdownText = if (days > 0) {
-                                "${media.relation} • ${days}d ${hours}h"
-                            } else if (hours > 0) {
-                                "${media.relation} • ${hours}h ${minutes}m"
-                            } else {
-                                "${media.relation} • ${minutes}m"
-                            }
-                            b.itemCompactCountdown.text = countdownText
-                        } else {
-                            b.itemCompactCountdown.visibility = View.GONE
-                        }
-                    } else {
-                        b.itemCompactCountdown.visibility = View.GONE
-                    }
+                    // Countdown Timer for Calendar & Home items
+                    bindCountdown(b.itemCompactCountdown, media)
                     
                     b.itemCompactUserProgress.text = (media.userProgress ?: "~").toString()
                     if (media.relation != null) {
@@ -183,6 +165,7 @@ class MediaAdaptor(
                 setAnimation(activity, b.root)
                 val media = mediaList?.get(position)
                 if (media != null) {
+                    bindCountdown(b.itemCompactCountdown, media)
                     b.itemCompactImage.loadImage(media.cover)
                     blurImage(b.itemCompactBanner, media.banner ?: media.cover)
                     b.itemCompactOngoing.isVisible =
@@ -228,7 +211,7 @@ class MediaAdaptor(
                 val b = (holder as MediaPageViewHolder).binding
                 val media = mediaList?.get(position)
                 if (media != null) {
-
+                    bindCountdown(b.itemCompactCountdown, media)
                     val bannerAnimations: Boolean = PrefManager.getVal(PrefName.BannerAnimations)
                     b.itemCompactImage.loadImage(media.cover)
                     if (bannerAnimations)
@@ -281,6 +264,7 @@ class MediaAdaptor(
                 val b = (holder as MediaPageSmallViewHolder).binding
                 val media = mediaList?.get(position)
                 if (media != null) {
+                    bindCountdown(b.itemCompactCountdown, media)
                     val bannerAnimations: Boolean = PrefManager.getVal(PrefName.BannerAnimations)
                     b.itemCompactImage.loadImage(media.cover)
                     if (bannerAnimations)
@@ -449,6 +433,57 @@ class MediaAdaptor(
         }
     }
 
+    private fun bindCountdown(countdownView: TextView, media: Media) {
+        if (!showCountdown) {
+            countdownView.visibility = View.GONE
+            return
+        }
+
+        if (media.airingAtTimestamp == null && media.timeUntilAiring != null) {
+            media.airingAtTimestamp = (System.currentTimeMillis() + media.timeUntilAiring!!) / 1000
+        }
+        
+        if (media.airingAtTimestamp != null && media.airingAtTimestamp!! > 0) {
+            val currentTime = System.currentTimeMillis() / 1000
+            val airingAt = media.airingAtTimestamp!!
+            if (airingAt > currentTime) {
+                countdownView.visibility = View.VISIBLE
+                val diff = airingAt - currentTime
+                val days = diff / 86400
+                val hours = (diff % 86400) / 3600
+                val minutes = (diff % 3600) / 60
+                
+                val epPrefix = if (media.relation != null) {
+                    media.relation
+                } else if (media.anime?.nextAiringEpisode != null) {
+                    "Ep ${media.anime.nextAiringEpisode!! + 1}"
+                } else {
+                    "Airing"
+                }
+                
+                val countdownText = if (days > 0) {
+                    "$epPrefix • ${days}d ${hours}h"
+                } else if (hours > 0) {
+                    "$epPrefix • ${hours}h ${minutes}m"
+                } else {
+                    "$epPrefix • ${minutes}m"
+                }
+                countdownView.text = countdownText
+                
+                // Add glowing green dot if airing within 24 hours
+                if (diff < 86400) {
+                    val dotDrawable = AppCompatResources.getDrawable(activity, R.drawable.ic_glowing_dot)
+                    countdownView.setCompoundDrawablesWithIntrinsicBounds(dotDrawable, null, null, null)
+                } else {
+                    countdownView.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
+                }
+            } else {
+                countdownView.visibility = View.GONE
+            }
+        } else {
+            countdownView.visibility = View.GONE
+        }
+    }
 
     fun longClicked(position: Int): Boolean {
         if ((mediaList?.size ?: 0) > position && position != -1) {

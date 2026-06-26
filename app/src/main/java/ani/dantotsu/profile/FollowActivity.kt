@@ -111,7 +111,9 @@ class FollowActivity : AppCompatActivity() {
                         user.id,
                         username,
                         user.avatar?.medium,
-                        user.bannerImage ?: user.avatar?.medium
+                        user.bannerImage ?: user.avatar?.medium,
+                        user.isFollowing,
+                        user.isFollower
                     ) { onUserClick(it) }
                 )
             } else {
@@ -121,7 +123,9 @@ class FollowActivity : AppCompatActivity() {
                         user.id,
                         username,
                         user.avatar?.medium,
-                        user.bannerImage ?: user.avatar?.medium
+                        user.bannerImage ?: user.avatar?.medium,
+                        user.isFollowing,
+                        user.isFollower
                     ) { onUserClick(it) }
                 )
             }

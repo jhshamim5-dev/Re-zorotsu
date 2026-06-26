@@ -120,21 +120,25 @@
 
             </LinearLayout>
 
-            <!-- Countdown Timer for Calendar (overlay at top of image) -->
+            <!-- Countdown Timer for Calendar & Home (overlay at top of image) -->
             <TextView
                 android:id="@+id/itemCompactCountdown"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top"
-                android:background="#99000000"
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginTop="6dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_countdown_pill"
                 android:ellipsize="end"
                 android:fontFamily="@font/poppins_semi_bold"
                 android:gravity="center"
-                android:maxLines="2"
-                android:paddingStart="4dp"
-                android:paddingTop="2dp"
-                android:paddingEnd="4dp"
-                android:paddingBottom="2dp"
+                android:maxLines="1"
+                android:paddingStart="8dp"
+                android:paddingTop="3dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="3dp"
+                android:drawablePadding="5dp"
                 android:textColor="#FFFFFF"
                 android:textSize="9sp"
                 android:visibility="gone"

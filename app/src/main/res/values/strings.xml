@@ -13,7 +13,7 @@
     <string name="discord" translatable="false">https://discord.gg/fYEJmDsDz9</string>
     <string name="github" translatable="false">https://github.com/AsrOfficialDev/ReDantotsu</string>
     <string name="telegram" translatable="false" tools:ignore="Typos">https://t.me/redantotsu</string>
-    <string name="coffee" translatable="false">https://paddle.com</string>
+    <string name="coffee" translatable="false">https://patreon.com/AsrOfficialDev</string>
     <string name="support_me">Support me</string>
 
     <string name="anilist_link">https://anilist.co/user/%1$s/</string>
@@ -179,6 +179,9 @@
     <string name="ending">Ending</string>
     <string name="prequel">Prequel</string>
     <string name="sequel">Sequel</string>
+    <string name="release_order">Release</string>
+    <string name="recommended_order">Recommended</string>
+    <string name="watch_order">Watch Order</string>
 
     <string name="anilist_settings">Anilist Settings</string>
     <string name="extension_settings">Extensions</string>
@@ -379,7 +382,7 @@
     <string name="other">Other</string>
     <string name="total_repeats">TOTAL REPEATS</string>
     <string name="custom_lists">Custom Lists</string>
-    <string name="donate_desc">Want to support ReDantotsu\'s development?\nConsider Buying Me a Tea ☕</string>
+    <string name="donate_desc">Support me on Patreon</string>
     <string name="donate_goal">No donation goal atm</string>
     <string name="filter">Filter</string>
     <string name="year">Year</string>
@@ -687,7 +690,7 @@
     <string name="answer_18">The reason this happens is probably because you\'re not using the default browser.\n\n>You have to set Chrome as your default browser to login to Anilist.\n\n>It takes a few seconds for the login button to display changes.\n\nIf it doesn\'t work then you could possibly be IP banned from Anilist or your ISP banned Anilist themselves. We believe that this is highly unlikely so open [Anilist](https://anilist.co) in your browser to see if that\`s the case.</string>
 
     <string name="question_19">What is torrent? How do I use it?</string>
-    <string name="answer_19">Torrent or formally known as BitTorrent is an internet communication protocol for peer\-to\-peer file sharing. A torrent network doesn\'t use a centralised server to host files. It shares files in a decentralised manner. A torrent network has two types of peers. Seeders &amp; Leachers.\n\n• Seeders : These are peers who completed downloading and has the full file. And now they are sharing this file to other peers which is called seeding. A torrent cannot work without at least one seeder. The more seeder a torrent has, the better.\n\n• Leachers : These are peers who are currently downloading the file. If they currently have 40&#37; downloaded then they will share the 40&#37; to any other peers who requests it.\n\nUnlike a centralised server, torrents have no bandwidth limit. You can get your files from hundreds of seeders at the highest possible speed your internet can offer. But many ISP throttle torrent to slow them down because it\'s demanding on their infrastructure. Use a VPN to circumvent this.\n\n• How to use torrents :\n\n1. Install the Torrent Add-on from \`Dantotsu &gt; Settings &gt; Add-ons &gt; Torrent Add-on.\` \n2. Get a source that provides torrents.\n3. USE A VPN. Using VPN while torrenting only has upsides. Without a VPN your IP address will be exposed, your ISP will throttle your network and you could possibly be fined if you live in a country first world country. DO NOT USE IT WITHOUT A VPN IF YOU DON\'T KNOW WHAT YOU\'RE DOING.\n4. Now use that source to start torrenting.</string>
+    <string name="answer_19" formatted="false">Torrent or formally known as BitTorrent is an internet communication protocol for peer\-to\-peer file sharing. A torrent network doesn\'t use a centralised server to host files. It shares files in a decentralised manner. A torrent network has two types of peers. Seeders &amp; Leachers.\n\n• Seeders : These are peers who completed downloading and has the full file. And now they are sharing this file to other peers which is called seeding. A torrent cannot work without at least one seeder. The more seeder a torrent has, the better.\n\n• Leachers : These are peers who are currently downloading the file. If they currently have 40&#37; downloaded then they will share the 40&#37; to any other peers who requests it.\n\nUnlike a centralised server, torrents have no bandwidth limit. You can get your files from hundreds of seeders at the highest possible speed your internet can offer. But many ISP throttle torrent to slow them down because it\'s demanding on their infrastructure. Use a VPN to circumvent this.\n\n• How to use torrents :\n\n1. Install the Torrent Add-on from \`Dantotsu &gt; Settings &gt; Add-ons &gt; Torrent Add-on.\` \n2. Get a source that provides torrents.\n3. USE A VPN. Using VPN while torrenting only has upsides. Without a VPN your IP address will be exposed, your ISP will throttle your network and you could possibly be fined if you live in a country first world country. DO NOT USE IT WITHOUT A VPN IF YOU DON\'T KNOW WHAT YOU\'RE DOING.\n4. Now use that source to start torrenting.</string>
 
     <string name="subscribed_notification">Subscribed! Receiving notifications, when new episodes are released on %1$s.</string>
 
@@ -877,10 +880,10 @@ Non quae tempore quo provident laudantium qui illo dolor vel quia dolor et exerc
     <string name="button_backup">Backup</string>
     <string name="no_location_selected">No location selected</string>
     <string name="enjoying_app">Enjoying the App?</string>
-    <string name="consider_donating">Consider Buying Me a Tea 🍵</string>
+    <string name="consider_donating">Consider supporting me on Patreon 💖</string>
     <string name="no_moners">no moners :(</string>
     <string name="you_be_rich">That\'s alright, you\'ll be a rich man soon :prayge:</string>
-    <string name="donate">send tea :)</string>
+    <string name="donate">Patreon</string>
     <string name="do_it">Do it!</string>
     <string name="password">Password</string>
 
@@ -1113,7 +1116,7 @@ Non quae tempore quo provident laudantium qui illo dolor vel quia dolor et exerc
     <string name="donate_dialog_desc">Your support helps keep ReDantotsu alive and improving!</string>
     <string name="become_a_supporter">Become a Supporter</string>
     <string name="opening_checkout_page">Opening checkout page…</string>
-    <string name="supporter_badge_info">Supporters get a special badge on their profile!</string>
+
     <string name="supporter">Supporter</string>
 
 </resources>
