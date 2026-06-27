@@ -41,7 +41,7 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { NetworkHelper(app) }
         addSingletonFactory { NetworkHelper(app).client }
 
-        addSingletonFactory { AnimeExtensionManager(app) }
+        addSingletonFactory { ani.dantotsu.aniyomi.anime.sources.InbuiltExtensionManager(AnimeExtensionManager(app)) }
         addSingletonFactory { MangaExtensionManager(app) }
         addSingletonFactory { NovelExtensionManager(app) }
         addSingletonFactory { ani.dantotsu.parsers.novel.lnreader.LnReaderPluginManager(app) }
