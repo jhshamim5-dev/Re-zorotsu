@@ -32,6 +32,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 
@@ -339,7 +340,7 @@ class Miruro(
         val anilistId = currentAnilistId ?: extractAnilistIdFromPipeRequest(response.request.url.toString())
 
         val fillerEpisodes = if (markFillers || hideFillers) {
-            resolveFillerEpisodes(anilistId, providers, preferredProvider)
+            runBlocking { resolveFillerEpisodes(anilistId, providers, preferredProvider) }
         } else {
             emptySet()
         }
@@ -721,7 +722,8 @@ class Miruro(
             put("type", "ANIME")
         }
         val json = Injekt.get<kotlinx.serialization.json.Json>()
-        val variablesStr = json.encodeToString<JsonObject>(variables)
+        val serializer = JsonObject.serializer()
+        val variablesStr = json.encodeToString(serializer, variables)
         val body = FormBody.Builder()
             .add("query", query)
             .add("variables", variablesStr)
