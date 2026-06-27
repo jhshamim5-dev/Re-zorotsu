@@ -20,6 +20,7 @@ import eu.kanade.tachiyomi.network.parseAs
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.put
 import okhttp3.FormBody
 import okhttp3.Headers
@@ -444,7 +445,7 @@ class Miruro(
         videos.addAll(
             requests.map { (subTypeKey, request) ->
                 try {
-                    client.newCall(request).awaitSuccess().use { resp ->
+                    client.newCall(request).execute().use { resp ->
                         parseStreamsFromResponse(resp, subTypeKey)
                     }
                 } catch (e: Exception) {
@@ -659,7 +660,7 @@ class Miruro(
 
     // ============================== Helpers ==============================
 
-    private fun resolveFillerEpisodes(
+    private suspend fun resolveFillerEpisodes(
         anilistId: Int?,
         providers: JSONObject,
         preferredProvider: String,
@@ -719,10 +720,11 @@ class Miruro(
             put("id", anilistId)
             put("type", "ANIME")
         }
-        val json = Injekt.get< kotlinx.serialization.json.Json>()
+        val json = Injekt.get<kotlinx.serialization.json.Json>()
+        val variablesStr = json.encodeToString<JsonObject>(variables)
         val body = FormBody.Builder()
             .add("query", query)
-            .add("variables", json.encodeToString(variables))
+            .add("variables", variablesStr)
             .build()
         return Request.Builder()
             .url(ANILIST_GRAPHQL_URL)
@@ -731,24 +733,26 @@ class Miruro(
     }
 
     private suspend fun fetchMalId(anilistId: Int): Int? = try {
-        client.newCall(anilistMalIdRequest(anilistId)).execute()
-            .parseAs<AnilistMalIdResponse>().data.media.idMal
+        val json = Injekt.get<kotlinx.serialization.json.Json>()
+        val responseBody = client.newCall(anilistMalIdRequest(anilistId)).execute().body?.string() ?: return null
+        json.decodeFromString<AnilistMalIdResponse>(responseBody).data.media.idMal
     } catch (e: Exception) {
         Log.e("Miruro", "Failed to resolve MAL ID: ${e.message}")
         null
     }
 
     private suspend fun fetchFillerEpisodes(malId: Int, maxEpisode: Float = Float.MAX_VALUE): Set<Float> {
+        val json = Injekt.get<kotlinx.serialization.json.Json>()
         val fillerEpisodes = mutableSetOf<Float>()
         var page = 1
         var hasNextPage = true
         val maxPages = 10
         while (hasNextPage && page <= maxPages) {
             val result = try {
-                jikanClient.newCall(
+                val responseBody = jikanClient.newCall(
                     GET("$JIKAN_API_URL/anime/$malId/episodes?page=$page"),
-                ).execute()
-                    .parseAs<JikanEpisodesDto>()
+                ).execute().body?.string() ?: break
+                json.decodeFromString<JikanEpisodesDto>(responseBody)
             } catch (e: Exception) {
                 Log.e("Miruro", "Failed to fetch/parse Jikan episodes: ${e.message}")
                 break
