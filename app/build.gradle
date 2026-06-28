@@ -161,6 +161,9 @@ dependencies {
     implementation 'io.github.kyant0:backdrop:1.0.0-rc02'
     implementation 'io.github.kyant0:capsule:2.1.2'
 
+//  Animated Bottom Bar
+    implementation(files("libs/AnimatedBottomBar-7fcb9af.aar"))
+
 //  UI
     implementation 'com.github.Dimezis:BlurView:version-2.0.3'
     implementation 'com.google.android.material:material:1.12.0'

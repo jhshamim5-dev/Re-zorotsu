@@ -29,33 +29,8 @@ import ani.dantotsu.settings.saving.PrefManager
 import ani.dantotsu.settings.saving.PrefName
 import ani.dantotsu.snackString
 import ani.dantotsu.themes.ThemeManager
-import ani.dantotsu.widgets.LiquidBottomTabs
-import ani.dantotsu.widgets.LiquidBottomTab
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.runtime.rememberCoroutineScope
+import nl.joery.animatedbottombar.AnimatedBottomBar
 import kotlinx.coroutines.launch
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.layout.fillMaxSize
-import com.kyant.backdrop.backdrops.layerBackdrop
-import eightbitlab.com.blurview.BlurView
-import com.google.android.material.bottomnavigation.BottomNavigationView
 
 
 class NoInternet : AppCompatActivity() {
@@ -93,129 +68,34 @@ class NoInternet : AppCompatActivity() {
             }
         }
 
-        // Check if Liquid Glass theme is active
-        val isLiquidGlassTheme = PrefManager.getVal<String>(PrefName.Theme) == "LIQUID_GLASS"
-        
-        if (isLiquidGlassTheme) {
-            // Use Compose HorizontalPager for Liquid Glass theme
-            binding.viewpager.visibility = View.GONE
-            binding.includedNavbar.root.visibility = View.GONE
-            binding.composeMainContent.visibility = View.VISIBLE
-            
-            binding.composeMainContent.setContent {
-                val pagerState = rememberPagerState(
-                    initialPage = selectedOption,
-                    pageCount = { 3 }
-                )
-                val coroutineScope = rememberCoroutineScope()
-                val backdrop = rememberLayerBackdrop()
+        // Use AnimatedBottomBar for all themes
+        binding.viewpager.visibility = View.VISIBLE
+        binding.includedNavbar.root.visibility = View.VISIBLE
+        binding.composeMainContent.visibility = View.GONE
 
-                // Sync pager to selectedOption changes ONLY
-                LaunchedEffect(selectedOption) {
-                    if (pagerState.currentPage != selectedOption) {
-                        pagerState.scrollToPage(selectedOption)
-                    }
-                }
-                
-                Box(modifier = Modifier.fillMaxSize()) {
-                    // Main content pager (offline fragments)
-                    HorizontalPager(
-                        state = pagerState,
-                        userScrollEnabled = false,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .layerBackdrop(backdrop)
-                    ) { page ->
-                        when (page) {
-                            0 -> OfflineAnimePageComposable(supportFragmentManager)
-                            1 -> OfflineHomePageComposable(supportFragmentManager)
-                            2 -> OfflineMangaPageComposable(supportFragmentManager)
-                        }
-                    }
-                    
-                    LiquidBottomTabs(
-                        selectedTabIndex = { selectedOption },
-                        onTabSelected = { index ->
-                            selectedOption = index
-                            coroutineScope.launch { pagerState.scrollToPage(index) }
-                        },
-                        backdrop = backdrop,
-                        tabsCount = 3,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 32.dp, start = 24.dp, end = 24.dp)
-                            .padding(12.dp)
-                    ) {
-                        LiquidBottomTab(onClick = {
-                            selectedOption = 0
-                            coroutineScope.launch { pagerState.scrollToPage(0) }
-                        }) {
-                            Icon(painterResource(R.drawable.ic_round_movie_filter_24), contentDescription = stringResource(R.string.anime))
-                            Text(stringResource(R.string.anime))
-                        }
+        val mainViewPager = binding.viewpager
+        val navbar = binding.includedNavbar.navbar as AnimatedBottomBar
 
-                        LiquidBottomTab(onClick = {
-                            selectedOption = 1
-                            coroutineScope.launch { pagerState.scrollToPage(1) }
-                        }) {
-                            Icon(painterResource(R.drawable.ic_round_home_24), contentDescription = stringResource(R.string.home))
-                            Text(stringResource(R.string.home))
-                        }
+        mainViewPager.isUserInputEnabled = false
+        mainViewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle)
+        mainViewPager.setPageTransformer(ZoomOutPageTransformer())
 
-                        LiquidBottomTab(onClick = {
-                            selectedOption = 2
-                            coroutineScope.launch { pagerState.scrollToPage(2) }
-                        }) {
-                            Icon(painterResource(R.drawable.ic_round_import_contacts_24), contentDescription = stringResource(R.string.manga))
-                            Text(stringResource(R.string.manga))
-                        }
-                    }
-                }
+        navbar.setOnTabSelectListener(object : AnimatedBottomBar.OnTabSelectListener {
+            override fun onTabSelected(
+                lastIndex: Int,
+                lastTab: AnimatedBottomBar.Tab?,
+                newIndex: Int,
+                newTab: AnimatedBottomBar.Tab
+            ) {
+                selectedOption = newIndex
+                mainViewPager.setCurrentItem(newIndex, false)
             }
-        } else {
-            // Use ViewPager2 for other themes
-            binding.viewpager.visibility = View.VISIBLE
-            binding.includedNavbar.root.visibility = View.VISIBLE
-            binding.composeMainContent.visibility = View.GONE
-            
-            val mainViewPager = binding.viewpager
-            val navbar = binding.includedNavbar.navbar
-            
-            mainViewPager.isUserInputEnabled = false
-            mainViewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle)
-            mainViewPager.setPageTransformer(ZoomOutPageTransformer())
+        })
 
-            navbar.setOnItemSelectedListener { item ->
-               when (item.itemId) {
-                    R.id.anime -> {
-                        selectedOption = 0
-                        mainViewPager.setCurrentItem(0, false)
-                        true
-                    }
-                    R.id.home -> {
-                        selectedOption = 1
-                        mainViewPager.setCurrentItem(1, false)
-                        true
-                    }
-                    R.id.manga -> {
-                        selectedOption = 2
-                        mainViewPager.setCurrentItem(2, false)
-                        true
-                    }
-                    else -> false
-                }
-            }
-
-            if (mainViewPager.currentItem != selectedOption) {
-                mainViewPager.post {
-                    mainViewPager.setCurrentItem(selectedOption, false)
-                    navbar.selectedItemId = when(selectedOption) {
-                        0 -> R.id.anime
-                        1 -> R.id.home
-                        2 -> R.id.manga
-                        else -> R.id.home
-                    }
-                }
+        if (mainViewPager.currentItem != selectedOption) {
+            mainViewPager.post {
+                mainViewPager.setCurrentItem(selectedOption, false)
+                navbar.selectTabAt(selectedOption)
             }
         }
     }

@@ -15,7 +15,7 @@ import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
 import eightbitlab.com.blurview.BlurView
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import nl.joery.animatedbottombar.AnimatedBottomBar
 import android.view.animation.AnticipateInterpolator
 import android.widget.TextView
 import androidx.activity.addCallback
@@ -89,18 +89,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ani.dantotsu.widgets.LiquidBottomTabs
-import ani.dantotsu.widgets.LiquidBottomTab
-import ani.dantotsu.widgets.GlassSettingsOverlay
-import ani.dantotsu.widgets.GlassSettingsController
+
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import ani.dantotsu.home.AnimePageComposable
-import ani.dantotsu.home.HomePageComposable
-import ani.dantotsu.home.MangaPageComposable
+
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch as coroutineLaunch
 import tachiyomi.core.util.lang.launchIO
@@ -280,159 +275,37 @@ class MainActivity : AppCompatActivity() {
             }
             binding.mainProgressBar.visibility = View.GONE
             
-            // Check if Liquid Glass theme is active
-            val isLiquidGlassTheme = PrefManager.getVal<String>(PrefName.Theme) == "LIQUID_GLASS"
-            
-            if (isLiquidGlassTheme) {
-                // Use Compose HorizontalPager for Liquid Glass theme
-                binding.viewpager.visibility = View.GONE
-                binding.includedNavbar.root.visibility = View.GONE // Hide XML navbar
-                binding.composeMainContent.visibility = View.VISIBLE
-                
-                binding.composeMainContent.setContent {
-                    val pagerState = rememberPagerState(
-                        initialPage = selectedOption,
-                        pageCount = { 3 }
+            // Use AnimatedBottomBar for all themes
+            binding.viewpager.visibility = View.VISIBLE
+            binding.includedNavbar.root.visibility = View.VISIBLE
+            binding.composeMainContent.visibility = View.GONE
+
+            val mainViewPager = binding.viewpager
+            val navbar = binding.includedNavbar.navbar as AnimatedBottomBar
+
+            mainViewPager.isUserInputEnabled = false
+            mainViewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle)
+            mainViewPager.setPageTransformer(ZoomOutPageTransformer())
+
+            navbar.setOnTabSelectListener(object : AnimatedBottomBar.OnTabSelectListener {
+                override fun onTabSelected(
+                    lastIndex: Int,
+                    lastTab: AnimatedBottomBar.Tab?,
+                    newIndex: Int,
+                    newTab: AnimatedBottomBar.Tab
+                ) {
+                    selectedOption = newIndex
+                    mainViewPager.setCurrentItem(newIndex, false)
+                }
+            })
+
+            if (mainViewPager.currentItem != selectedOption) {
+                mainViewPager.post {
+                    mainViewPager.setCurrentItem(
+                        selectedOption,
+                        false
                     )
-                    val coroutineScope = rememberCoroutineScope()
-                    val backdrop = rememberLayerBackdrop() // Shared backdrop for glass effect
-
-                    // Sync pager state to global selectedOption when page changes
-                    LaunchedEffect(pagerState.currentPage) {
-                        if (selectedOption != pagerState.currentPage) {
-                            selectedOption = pagerState.currentPage
-                        }
-                    }
-                    
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        // Main content pager captured by backdrop
-                        HorizontalPager(
-                            state = pagerState,
-                            userScrollEnabled = false,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .layerBackdrop(backdrop) // Capture content for glass effect
-                        ) { page ->
-                            when (page) {
-                                0 -> AnimePageComposable(supportFragmentManager)
-                                1 -> HomePageComposable(supportFragmentManager)
-                                2 -> MangaPageComposable(supportFragmentManager)
-                            }
-                        }
-
-                        // Floating Liquid Bottom Tabs
-                        var selectedIndex by remember { mutableIntStateOf(selectedOption) }
-
-                        // Listen to pager changes to update tabs
-                        LaunchedEffect(pagerState.currentPage) {
-                             selectedIndex = pagerState.currentPage
-                        }
-
-                        LiquidBottomTabs(
-                            selectedTabIndex = { selectedIndex },
-                            onTabSelected = { index ->
-                                selectedIndex = index
-                                selectedOption = index
-                                coroutineScope.launch {
-                                    pagerState.scrollToPage(index)
-                                }
-                            },
-                            backdrop = backdrop, // Use the captured content
-                            tabsCount = 3,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = 32.dp, start = 24.dp, end = 24.dp)
-                                .padding(12.dp) // Internal padding for animation clipping
-                        ) {
-                            LiquidBottomTab(onClick = {
-                                selectedIndex = 0
-                                selectedOption = 0
-                                coroutineScope.launch { pagerState.scrollToPage(0) }
-                            }) {
-                                Icon(painterResource(R.drawable.ic_round_movie_filter_24), contentDescription = stringResource(R.string.anime))
-                                Text(stringResource(R.string.anime))
-                            }
-
-                            LiquidBottomTab(onClick = {
-                                selectedIndex = 1
-                                selectedOption = 1
-                                coroutineScope.launch { pagerState.scrollToPage(1) }
-                            }) {
-                                Icon(painterResource(R.drawable.ic_round_home_24), contentDescription = stringResource(R.string.home))
-                                Text(stringResource(R.string.home))
-                            }
-
-                            LiquidBottomTab(onClick = {
-                                selectedIndex = 2
-                                selectedOption = 2
-                                coroutineScope.launch { pagerState.scrollToPage(2) }
-                            }) {
-                                Icon(painterResource(R.drawable.ic_round_import_contacts_24), contentDescription = stringResource(R.string.manga))
-                                Text(stringResource(R.string.manga))
-                            }
-                        }
-
-                        // Glass Settings Overlay
-                        GlassSettingsOverlay(
-                            visible = GlassSettingsController.showSettingsOverlay.value,
-                            backdrop = backdrop,
-                            onDismiss = { GlassSettingsController.hide() },
-                            onLogout = {
-                                Anilist.removeSavedToken()
-                                startMainActivity(this@MainActivity)
-                                GlassSettingsController.hide()
-                            }
-                        )
-                    }
-                }
-            } else {
-                // Use ViewPager2 for other themes
-                binding.viewpager.visibility = View.VISIBLE
-                binding.includedNavbar.root.visibility = View.VISIBLE
-                binding.composeMainContent.visibility = View.GONE
-                
-                val mainViewPager = binding.viewpager
-                val navbar = binding.includedNavbar.navbar
-                
-                mainViewPager.isUserInputEnabled = false
-                mainViewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle)
-                mainViewPager.setPageTransformer(ZoomOutPageTransformer())
-
-                navbar.setOnItemSelectedListener { item ->
-                    when (item.itemId) {
-                        R.id.anime -> {
-                            selectedOption = 0
-                            mainViewPager.setCurrentItem(0, false)
-                            true
-                        }
-                        R.id.home -> {
-                            selectedOption = 1
-                            mainViewPager.setCurrentItem(1, false)
-                            true
-                        }
-                        R.id.manga -> {
-                            selectedOption = 2
-                            mainViewPager.setCurrentItem(2, false)
-                            true
-                        }
-                        else -> false
-                    }
-                }
-
-                if (mainViewPager.currentItem != selectedOption) {
-                    mainViewPager.post {
-                        mainViewPager.setCurrentItem(
-                            selectedOption,
-                            false
-                        )
-                        // Update navbar selection
-                        navbar.selectedItemId = when(selectedOption) {
-                            0 -> R.id.anime
-                            1 -> R.id.home
-                            2 -> R.id.manga
-                            else -> R.id.home
-                        }
-                    }
+                    navbar.selectTabAt(selectedOption)
                 }
             }
             binding.includedNavbar.navbarContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
