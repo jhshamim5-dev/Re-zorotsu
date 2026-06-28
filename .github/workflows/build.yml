@@ -1,4 +1,4 @@
-name: Build Debug APK
+name: Build Signed APK
 
 on:
   workflow_dispatch:
@@ -36,16 +36,23 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Debug APK
+      - name: Decode Keystore
+        run: echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > app/release.keystore
+
+      - name: Build Signed APK
         run: |
           rm -rf ~/.gradle/caches/build-cache-*
-          ./gradlew assembleDebug --no-daemon --no-build-cache
+          ./gradlew assembleGoogleRelease --no-daemon --no-build-cache \
+            -Pandroid.injected.signing.store.file=app/release.keystore \
+            -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
+            -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
+            -Pandroid.injected.signing.key.password=${{ secrets.KEY_ALIAS_PASSWORD }}
 
-      - name: Upload Universal APK
+      - name: Upload Signed APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
-          path: app/build/outputs/apk/google/debug/*-universal-*.apk
-          retention-days: 7
+          name: signed-apk
+          path: app/build/outputs/apk/google/release/*-universal-*.apk
+          retention-days: 30
           if-no-files-found: error
