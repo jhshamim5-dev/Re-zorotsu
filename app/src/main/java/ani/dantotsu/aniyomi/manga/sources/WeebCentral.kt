@@ -3,27 +3,26 @@ package ani.dantotsu.aniyomi.manga.sources
 import android.content.SharedPreferences
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.asObservableSuccess
-import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
-import eu.kanade.tachiyomi.source.online.ParsedHttpSource
+import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.util.asJsoup
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Request
 import okhttp3.Response
 import org.jsoup.nodes.Element
+import rx.Observable
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
-import kotlin.time.Duration.Companion.seconds
 
 class WeebCentral(
     private val preferences: SharedPreferences,
-) : ParsedHttpSource() {
+) : HttpSource() {
 
     override val name = "Weeb Central"
 
@@ -59,7 +58,11 @@ class WeebCentral(
 
     // =============================== Search ===============================
 
-    override suspend fun getSearchManga(page: Int, query: String, filters: FilterList): MangasPage {
+    override fun fetchSearchManga(
+        page: Int,
+        query: String,
+        filters: FilterList,
+    ): Observable<MangasPage> {
         if (query.startsWith("https://")) {
             val url = query.toHttpUrl()
             if (url.host != baseUrl.toHttpUrl().host) {
@@ -69,14 +72,14 @@ class WeebCentral(
             if (pathSegments.size < 3) {
                 throw Exception("Unsupported url")
             }
-            val slug = pathSegments[1] + "/" + pathSegments[2]
+            val slug = "${pathSegments[1]}/${pathSegments[2]}"
             return client.newCall(mangaDetailsRequest(SManga.create().apply { url = "/series/$slug" }))
-                .awaitSuccess()
-                .use { parse ->
-                    MangasPage(listOf(mangaDetailsParse(parse).apply { initialized = true }), false)
+                .asObservableSuccess()
+                .map { response ->
+                    MangasPage(listOf(mangaDetailsParse(response).apply { initialized = true }), false)
                 }
         }
-        return super.getSearchManga(page, query, filters)
+        return super.fetchSearchManga(page, query, filters)
     }
 
     override fun searchMangaRequest(page: Int, query: String, filters: FilterList): Request {
