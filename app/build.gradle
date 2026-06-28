@@ -163,6 +163,7 @@ dependencies {
 
 //  Animated Bottom Bar
     implementation(files("libs/AnimatedBottomBar-7fcb9af.aar"))
+    implementation 'com.google.android.flexbox:flexbox:3.0.0'
 
 //  UI
     implementation 'com.github.Dimezis:BlurView:version-2.0.3'
