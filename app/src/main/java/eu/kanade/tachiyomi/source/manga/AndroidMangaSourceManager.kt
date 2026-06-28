@@ -36,6 +36,12 @@ class AndroidMangaSourceManager(
         sourcesMapFlow.map { it.values.filterIsInstance<CatalogueSource>() }
 
     init {
+        // Add inbuilt sources immediately so they're always available
+        val inbuiltExtension = InbuiltWeebCentralExtension(context).createInstalledExtension()
+        inbuiltExtension.sources.forEach { source ->
+            sourcesMapFlow.value[source.id] = source
+            registerStubSource(source.toSourceData())
+        }
         scope.launch {
             extensionManager.installedExtensionsFlow
                 .collectLatest { extensions ->
@@ -46,17 +52,15 @@ class AndroidMangaSourceManager(
                             ),
                         ),
                     )
+                    // Re-add inbuilt sources (they should already be in the map)
+                    inbuiltExtension.sources.forEach { source ->
+                        mutableMap[source.id] = source
+                    }
                     extensions.forEach { extension ->
                         extension.sources.forEach {
                             mutableMap[it.id] = it
                             registerStubSource(it.toSourceData())
                         }
-                    }
-                    // Add inbuilt sources
-                    val inbuiltExtension = InbuiltWeebCentralExtension(context).createInstalledExtension()
-                    inbuiltExtension.sources.forEach { source ->
-                        mutableMap[source.id] = source
-                        registerStubSource(source.toSourceData())
                     }
                     sourcesMapFlow.value = mutableMap
                 }
