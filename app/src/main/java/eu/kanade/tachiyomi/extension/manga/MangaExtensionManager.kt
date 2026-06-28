@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.extension.api.ExtensionGithubApi
 import eu.kanade.tachiyomi.extension.manga.model.AvailableMangaSources
 import eu.kanade.tachiyomi.extension.manga.model.MangaExtension
 import eu.kanade.tachiyomi.extension.manga.model.MangaLoadResult
+import eu.kanade.tachiyomi.extension.manga.InbuiltMangaSources
 import eu.kanade.tachiyomi.extension.util.ExtensionInstallReceiver
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
@@ -100,9 +101,36 @@ class MangaExtensionManager(
     private fun initExtensions() {
         val extensions = ExtensionLoader.loadMangaExtensions(context)
 
-        _installedExtensionsFlow.value = extensions
+        val installedExtensions = extensions
             .filterIsInstance<MangaLoadResult.Success>()
             .map { it.extension }
+            .toMutableList()
+
+        // Add Weeb Central as a built-in "installed" extension
+        val inbuiltSources = InbuiltMangaSources.createSources(context)
+        if (inbuiltSources.isNotEmpty()) {
+            installedExtensions.add(
+                MangaExtension.Installed(
+                    name = "Weeb Central (Built-in)",
+                    pkgName = "ani.dantotsu.weebcentral.inbuilt",
+                    versionName = "1.0.0",
+                    versionCode = 1L,
+                    libVersion = 15.0,
+                    lang = "en",
+                    isNsfw = false,
+                    hasReadme = false,
+                    hasChangelog = false,
+                    pkgFactory = null,
+                    sources = inbuiltSources,
+                    icon = null,
+                    hasUpdate = false,
+                    isObsolete = false,
+                    isUnofficial = false,
+                )
+            )
+        }
+
+        _installedExtensionsFlow.value = installedExtensions
 
         _untrustedExtensionsFlow.value = extensions
             .filterIsInstance<MangaLoadResult.Untrusted>()
