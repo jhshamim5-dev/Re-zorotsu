@@ -190,15 +190,6 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
 
-            settingPatreon.setOnClickListener {
-                lifecycleScope.launch {
-                    it.pop()
-                }
-                openLinkInBrowser(getString(R.string.coffee))
-            }
-            lifecycleScope.launch {
-                settingPatreon.pop()
-            }
 
             loginDiscord.setOnClickListener {
                 openLinkInBrowser(getString(R.string.discord))
@@ -242,30 +233,6 @@ class SettingsActivity : AppCompatActivity() {
                 }
 
             }
-
-            lifecycleScope.launch(Dispatchers.IO) {
-                delay(2000)
-                runOnUiThread {
-                    if (Random.nextInt(0, 100) > 69) {
-                        CustomBottomDialog.newInstance().apply {
-                            title = this@SettingsActivity.getString(R.string.enjoying_app)
-                            addView(TextView(this@SettingsActivity).apply {
-                                text = context.getString(R.string.consider_donating)
-                            })
-
-                            setNegativeButton(this@SettingsActivity.getString(R.string.no_moners)) {
-                                snackString(R.string.you_be_rich)
-                                dismiss()
-                            }
-
-                            setPositiveButton(this@SettingsActivity.getString(R.string.donate)) {
-                                settingPatreon.performClick()
-                                dismiss()
-                            }
-                            show(supportFragmentManager, "dialog")
-                        }
-                    }
-                }
             }
         }
     }
