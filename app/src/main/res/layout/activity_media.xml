@@ -355,8 +355,8 @@
 
         <ani.dantotsu.widgets.LiquidGlassBottomBar
             android:id="@+id/mediaBottomBar"
-            android:layout_width="280dp"
-            android:layout_height="72dp"
+            android:layout_width="260dp"
+            android:layout_height="66dp"
             android:layout_gravity="center_horizontal|bottom"
             android:layout_marginBottom="32dp"
             android:elevation="8dp" />
