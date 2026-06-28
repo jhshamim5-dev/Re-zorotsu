@@ -158,7 +158,8 @@ fun LiquidBottomTabs(
             )
         }
 
-        Row(
+        // Glass backdrop layer
+        Box(
             Modifier
                 .graphicsLayer {
                     translationX = panelOffset
@@ -168,8 +169,8 @@ fun LiquidBottomTabs(
                     shape = { ContinuousCapsule },
                     effects = {
                         vibrancy()
-                        blur(5f.dp.toPx()) // Reduced blur for better performance
-                        lens(16f.dp.toPx(), 16f.dp.toPx()) // Reduced lens effect
+                        blur(5f.dp.toPx())
+                        lens(16f.dp.toPx(), 16f.dp.toPx())
                     },
                     layerBlock = {
                         val progress = dampedDragAnimation.pressProgress
@@ -182,13 +183,23 @@ fun LiquidBottomTabs(
                 .then(interactiveHighlight.modifier)
                 .height(64f.dp)
                 .fillMaxWidth()
+                .padding(4f.dp)
+        )
+        // Content layer drawn on top of glass
+        Row(
+            Modifier
+                .graphicsLayer {
+                    translationX = panelOffset
+                }
+                .height(64f.dp)
+                .fillMaxWidth()
                 .padding(4f.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             CompositionLocalProvider(
                 androidx.compose.material3.LocalContentColor provides
-                    if (isLightTheme) Color.Black.copy(0.6f)
-                    else Color.White.copy(0.9f)
+                    if (isLightTheme) Color.Black.copy(0.85f)
+                    else Color.White
             ) {
                 content()
             }
