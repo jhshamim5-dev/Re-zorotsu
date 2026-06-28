@@ -230,9 +230,8 @@ fun LiquidBottomTabs(
                     .fillMaxWidth()
                     .padding(horizontal = 4f.dp)
                     .graphicsLayer(colorFilter = ColorFilter.tint(accentColor)),
-                verticalAlignment = Alignment.CenterVertically,
-                content = content
-            )
+                verticalAlignment = Alignment.CenterVertically
+            ) { }
         }
 
         Box(
