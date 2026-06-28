@@ -233,7 +233,6 @@ class SettingsActivity : AppCompatActivity() {
                 }
 
             }
-            }
         }
     }
 
