@@ -88,7 +88,7 @@ class AndroidMangaSourceManager(
     }
 
     private fun registerStubSource(sourceData: MangaSourceData) {
-
+        stubSourcesMap[sourceData.id] = StubMangaSource(sourceData)
     }
 
     private fun createStubSource(id: Long): StubMangaSource {
