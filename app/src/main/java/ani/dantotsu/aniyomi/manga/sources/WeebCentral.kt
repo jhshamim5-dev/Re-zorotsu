@@ -73,7 +73,7 @@ class WeebCentral(
                 throw Exception("Unsupported url")
             }
             val slug = "${pathSegments[1]}/${pathSegments[2]}"
-            return client.newCall(mangaDetailsRequest(SManga.create().apply { url = "/series/$slug" }))
+            return client.newCall(mangaDetailsRequest(SManga.create().apply { setUrlWithoutDomain("/series/$slug") }))
                 .asObservableSuccess()
                 .map { response ->
                     MangasPage(listOf(mangaDetailsParse(response).apply { initialized = true }), false)
