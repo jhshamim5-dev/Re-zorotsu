@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.source.manga
 
 import android.content.Context
+import ani.dantotsu.aniyomi.manga.sources.InbuiltWeebCentralExtension
 import eu.kanade.tachiyomi.extension.manga.MangaExtensionManager
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.MangaSource
@@ -50,6 +51,12 @@ class AndroidMangaSourceManager(
                             mutableMap[it.id] = it
                             registerStubSource(it.toSourceData())
                         }
+                    }
+                    // Add inbuilt sources
+                    val inbuiltExtension = InbuiltWeebCentralExtension(context).createInstalledExtension()
+                    inbuiltExtension.sources.forEach { source ->
+                        mutableMap[source.id] = source
+                        registerStubSource(source.toSourceData())
                     }
                     sourcesMapFlow.value = mutableMap
                 }
