@@ -24,6 +24,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.asJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.CacheControl
 import okhttp3.Headers
@@ -408,6 +409,12 @@ class Anikoto(
 
     override fun videoListParse(response: Response): List<Video> = throw UnsupportedOperationException()
 
+    override fun videoListSelector(): String = throw UnsupportedOperationException()
+
+    override fun videoFromElement(element: Element): Video = throw UnsupportedOperationException()
+
+    override fun videoUrlParse(document: Document): String = throw UnsupportedOperationException()
+
     override suspend fun getVideoList(episode: SEpisode): List<Video> {
         val isServerInvalid = preferences.getBoolean(PREF_SERVER_INVALID_FLAG, false) ||
             (prefServer.isNotEmpty() && prefServer !in discoveredServers && prefServer !in hosterNames)
@@ -468,8 +475,8 @@ class Anikoto(
     }
 
     private fun parseServerUrl(jsonStr: String): String {
-        val json = json.parseToJsonElement(jsonStr).asJsonObject
-        return json["result"]?.asJsonObject?.get("url")?.jsonPrimitive?.content
+        val parsed = json.parseToJsonElement(jsonStr).asJsonObject
+        return parsed["result"]?.asJsonObject?.get("url")?.jsonPrimitive?.content
             ?: throw Exception("No URL in server response")
     }
 
@@ -504,19 +511,22 @@ class Anikoto(
 
                 val servers = mutableListOf<VideoData>()
 
-                for ((key, serverDto) in mapperJson) {
+                for ((key, serverDto) in mapperJson.entries) {
                     if (key.equals("status", true)) continue
                     val serverName = mapMapperServerName(key)
                     val dtoElement = serverDto as? JsonObject ?: continue
 
-                    listOf("sub" to "H-Sub", "dub" to "A-Dub").forEach { (typeKey, typeLabel) ->
-                        val linkUrl = dtoElement[typeKey]?.asJsonObject?.get("url")?.jsonPrimitive?.content
-                            ?: return@forEach
+                    val subDto = dtoElement["sub"] as? JsonObject
+                    val dubDto = dtoElement["dub"] as? JsonObject
 
-                        if (!hostToggle.contains(serverName)) return@forEach
-                        if (!isTypeEnabled(typeLabel, typeToggle)) return@forEach
+                    if (subDto != null && hostToggle.contains(serverName) && isTypeEnabled("H-Sub", typeToggle)) {
+                        val linkUrl = subDto["url"]?.jsonPrimitive?.content ?: continue
+                        servers.add(VideoData("H-Sub", linkUrl, serverName))
+                    }
 
-                        servers.add(VideoData(typeLabel, linkUrl, serverName))
+                    if (dubDto != null && hostToggle.contains(serverName) && isTypeEnabled("A-Dub", typeToggle)) {
+                        val linkUrl = dubDto["url"]?.jsonPrimitive?.content ?: continue
+                        servers.add(VideoData("A-Dub", linkUrl, serverName))
                     }
                 }
 
