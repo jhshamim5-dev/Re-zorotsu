@@ -109,8 +109,10 @@ class AnimeExtensionManager(
             .map { it.extension }
             .toMutableList()
 
-        // Add Miruro as a built-in "installed" extension
-        val miruroSources = InbuiltAnimeSources.createSources(context)
+        // Add built-in sources as "installed" extensions
+        val builtInSources = InbuiltAnimeSources.createSources(context)
+
+        val miruroSources = builtInSources.filter { it.name == "Miruro.tv" }
         if (miruroSources.isNotEmpty()) {
             installedExtensions.add(
                 AnimeExtension.Installed(
@@ -125,6 +127,29 @@ class AnimeExtensionManager(
                     hasChangelog = false,
                     pkgFactory = null,
                     sources = miruroSources,
+                    icon = null,
+                    hasUpdate = false,
+                    isObsolete = false,
+                    isUnofficial = false,
+                )
+            )
+        }
+
+        val anikotoSources = builtInSources.filter { it.name == "Anikoto" }
+        if (anikotoSources.isNotEmpty()) {
+            installedExtensions.add(
+                AnimeExtension.Installed(
+                    name = "Anikoto (Built-in)",
+                    pkgName = "ani.dantotsu.anikoto.inbuilt",
+                    versionName = "1.0.0",
+                    versionCode = 1L,
+                    libVersion = 1.0,
+                    lang = "en",
+                    isNsfw = false,
+                    hasReadme = false,
+                    hasChangelog = false,
+                    pkgFactory = null,
+                    sources = anikotoSources,
                     icon = null,
                     hasUpdate = false,
                     isObsolete = false,
