@@ -18,16 +18,10 @@ import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.interceptor.rateLimitHost
 import eu.kanade.tachiyomi.util.asJsoup
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.asJsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.CacheControl
 import okhttp3.Headers
+import org.json.JSONObject
+import org.json.JSONArray
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -88,8 +82,6 @@ class Anikoto(
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
     }
-
-    private val json = Json { ignoreUnknownKeys = true }
 
     // ============================ Discovered Servers =======================
 
@@ -348,7 +340,13 @@ class Anikoto(
 
         return try {
             val body = response.body.string()
-            val document = Jsoup.parseBodyFragment(body)
+            // Response is JSON with HTML inside "result" field
+            val htmlContent = try {
+                JSONObject(body).optString("result")
+            } catch (_: Exception) {
+                body
+            }
+            val document = Jsoup.parseBodyFragment(htmlContent)
             document.select(episodeListSelector())
                 .map { episodeFromElement(it, animeUrl) }
                 .reversed()
@@ -359,6 +357,8 @@ class Anikoto(
     }
 
     override fun episodeFromElement(element: Element): SEpisode = throw UnsupportedOperationException()
+
+    override fun episodeVideoParse(response: Response): SEpisode = throw UnsupportedOperationException()
 
     private fun episodeFromElement(element: Element, animeUrl: String): SEpisode {
         val title = element.parent()?.attr("title") ?: ""
@@ -475,8 +475,8 @@ class Anikoto(
     }
 
     private fun parseServerUrl(jsonStr: String): String {
-        val parsed = json.parseToJsonElement(jsonStr).asJsonObject
-        return parsed["result"]?.asJsonObject?.get("url")?.jsonPrimitive?.content
+        val parsed = JSONObject(jsonStr)
+        return parsed.optJSONObject("result")?.optString("url")
             ?: throw Exception("No URL in server response")
     }
 
@@ -500,33 +500,41 @@ class Anikoto(
 
             client.newCall(GET(apiUrl, mapperHeaders)).awaitSuccess().use { apiResponse ->
                 val body = apiResponse.body.string()
-                val mapperJson = json.parseToJsonElement(body).asJsonObject
+                val mapperJson = JSONObject(body)
 
-                mapperJson.keys
+                val serverNames = mapperJson.keys()
+                    .asSequence()
                     .filter { !it.equals("status", true) }
                     .map { mapMapperServerName(it) }
-                    .also { updateDiscoveredServers(it, isMapper = true) }
+                    .toList()
+                updateDiscoveredServers(serverNames, isMapper = true)
 
                 updateDiscoveredTypes(listOf("H-Sub", "A-Dub"))
 
                 val servers = mutableListOf<VideoData>()
 
-                for ((key, serverDto) in mapperJson.entries) {
+                val keys = mapperJson.keys()
+                while (keys.hasNext()) {
+                    val key = keys.next()
                     if (key.equals("status", true)) continue
                     val serverName = mapMapperServerName(key)
-                    val dtoElement = serverDto as? JsonObject ?: continue
+                    val dtoElement = mapperJson.optJSONObject(key) ?: continue
 
-                    val subDto = dtoElement["sub"] as? JsonObject
-                    val dubDto = dtoElement["dub"] as? JsonObject
+                    val subDto = dtoElement.optJSONObject("sub")
+                    val dubDto = dtoElement.optJSONObject("dub")
 
                     if (subDto != null && hostToggle.contains(serverName) && isTypeEnabled("H-Sub", typeToggle)) {
-                        val linkUrl = subDto["url"]?.jsonPrimitive?.content ?: continue
-                        servers.add(VideoData("H-Sub", linkUrl, serverName))
+                        val linkUrl = subDto.optString("url")
+                        if (linkUrl.isNotEmpty()) {
+                            servers.add(VideoData("H-Sub", linkUrl, serverName))
+                        }
                     }
 
                     if (dubDto != null && hostToggle.contains(serverName) && isTypeEnabled("A-Dub", typeToggle)) {
-                        val linkUrl = dubDto["url"]?.jsonPrimitive?.content ?: continue
-                        servers.add(VideoData("A-Dub", linkUrl, serverName))
+                        val linkUrl = dubDto.optString("url")
+                        if (linkUrl.isNotEmpty()) {
+                            servers.add(VideoData("A-Dub", linkUrl, serverName))
+                        }
                     }
                 }
 
@@ -679,24 +687,24 @@ class Anikoto(
     }
 
     private fun parseM3u8FromSources(jsonStr: String): String {
-        val element = json.parseToJsonElement(jsonStr)
-        val obj = element.asJsonObject
+        val obj = JSONObject(jsonStr)
 
         // Try "sources" field
-        val sources = obj["sources"]
-        if (sources is JsonPrimitive && sources.content.startsWith("http")) {
-            return sources.content
+        val sources = obj.opt("sources")
+        if (sources is String && sources.startsWith("http")) {
+            return sources
         }
-        if (sources is JsonObject) {
-            sources["file"]?.jsonPrimitive?.content?.let { return it }
+        if (sources is JSONObject) {
+            sources.optString("file").takeIf { it.isNotEmpty() }?.let { return it }
         }
-        if (sources is JsonArray) {
-            sources.firstOrNull()?.let { item ->
-                if (item is JsonObject) {
-                    item["file"]?.jsonPrimitive?.content?.let { return it }
+        if (sources is JSONArray) {
+            for (i in 0 until sources.length()) {
+                val item = sources.get(i)
+                if (item is JSONObject) {
+                    item.optString("file").takeIf { it.isNotEmpty() }?.let { return it }
                 }
-                if (item is JsonPrimitive && item.content.startsWith("http")) {
-                    return item.content
+                if (item is String && item.startsWith("http")) {
+                    return item
                 }
             }
         }
