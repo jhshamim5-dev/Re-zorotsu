@@ -434,8 +434,14 @@ class Anikoto(
         }
 
         val body = response.body.string()
+        // Response is JSON with HTML inside "result" field
+        val htmlContent = try {
+            JSONObject(body).optString("result")
+        } catch (_: Exception) {
+            body
+        }
         val document = try {
-            Jsoup.parseBodyFragment(body)
+            Jsoup.parseBodyFragment(htmlContent)
         } catch (e: Exception) {
             Log.e("Anikoto", "Failed to parse video list: ${e.message}")
             return emptyList()
