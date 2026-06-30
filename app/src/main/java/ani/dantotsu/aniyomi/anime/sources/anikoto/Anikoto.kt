@@ -682,11 +682,9 @@ class Anikoto(
                 "https://$host/stream/getSourcesNew?id=$dataId&id=$dataId"
             }
 
-            client.newCall(GET(newUrl, apiHeaders))
-                .awaitSuccess().use { response ->
-                    if (!response.isSuccessful) throw Exception("getSourcesNew failed: HTTP ${response.code}")
-                    parseM3u8FromSources(response.body.string())
-                }
+            val response = client.newCall(GET(newUrl, apiHeaders)).awaitSuccess()
+            if (!response.isSuccessful) throw Exception("getSourcesNew failed: HTTP ${response.code}")
+            response.use { parseM3u8FromSources(it.body.string()) }
         }
     }
 
@@ -699,17 +697,15 @@ class Anikoto(
             sources is String && sources.startsWith("http") -> sources
             sources is JSONObject -> sources.optString("file")
             sources is JSONArray -> {
-                var found: String? = null
-                for (i in 0 until sources.length()) {
-                    val item = sources.get(i)
-                    if (item is JSONObject) {
-                        item.optString("file").takeIf { it.isNotEmpty() }?.let { found = it; break }
+                (0 until sources.length())
+                    .map { sources.get(it) }
+                    .firstNotNullOfOrNull { item ->
+                        when (item) {
+                            is JSONObject -> item.optString("file").takeIf { it.isNotEmpty() }
+                            is String -> item.takeIf { it.startsWith("http") }
+                            else -> null
+                        }
                     }
-                    if (item is String && item.startsWith("http")) {
-                        found = item; break
-                    }
-                }
-                found
             }
             else -> null
         } ?: throw Exception("No valid m3u8 found in sources")
