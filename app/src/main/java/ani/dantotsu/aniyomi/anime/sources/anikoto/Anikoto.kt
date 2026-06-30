@@ -650,9 +650,7 @@ class Anikoto(
             add("Origin", "https://$host")
         }.build()
 
-        val m3u8 = fetchSourceData(dataId, host, apiHeaders, streamType)
-
-        val subtitles = emptyList<Track>() // Subtitles would need additional parsing
+        val (m3u8, subtitles) = fetchSourceData(dataId, host, apiHeaders, streamType)
 
         val displayName = getServerDisplayName(server.serverName)
         val typeSuffix = server.type.takeIf { it.isNotEmpty() }?.let { " - $it" } ?: ""
@@ -670,7 +668,7 @@ class Anikoto(
         host: String,
         apiHeaders: Headers,
         streamType: String,
-    ): String {
+    ): Pair<String, List<Track>> {
         return try {
             client.newCall(GET("https://$host/stream/getSources?id=$dataId&id=$dataId", apiHeaders))
                 .awaitSuccess().use { response ->
@@ -692,30 +690,74 @@ class Anikoto(
         }
     }
 
-    private fun parseM3u8FromSources(jsonStr: String): String {
+    private fun parseM3u8FromSources(jsonStr: String): Pair<String, List<Track>> {
         val obj = JSONObject(jsonStr)
 
         // Try "sources" field
         val sources = obj.opt("sources")
-        if (sources is String && sources.startsWith("http")) {
-            return sources
-        }
-        if (sources is JSONObject) {
-            sources.optString("file").takeIf { it.isNotEmpty() }?.let { return it }
-        }
-        if (sources is JSONArray) {
-            for (i in 0 until sources.length()) {
-                val item = sources.get(i)
-                if (item is JSONObject) {
-                    item.optString("file").takeIf { it.isNotEmpty() }?.let { return it }
+        val m3u8 = when {
+            sources is String && sources.startsWith("http") -> sources
+            sources is JSONObject -> sources.optString("file")
+            sources is JSONArray -> {
+                var found: String? = null
+                for (i in 0 until sources.length()) {
+                    val item = sources.get(i)
+                    if (item is JSONObject) {
+                        item.optString("file").takeIf { it.isNotEmpty() }?.let { found = it; break }
+                    }
+                    if (item is String && item.startsWith("http")) {
+                        found = item; break
+                    }
                 }
-                if (item is String && item.startsWith("http")) {
-                    return item
+                found
+            }
+            else -> null
+        } ?: throw Exception("No valid m3u8 found in sources")
+
+        // Parse subtitle tracks from "subtitle" or "subtitles" field
+        val subtitles = parseSubtitleTracks(obj)
+
+        Pair(m3u8, subtitles)
+    }
+
+    private fun parseSubtitleTracks(obj: JSONObject): List<Track> {
+        // Some servers use "subtitle" (string URL) or "subtitles" (array of {file, label})
+        val subtitleList = mutableListOf<Track>()
+
+        // Single subtitle URL
+        obj.optString("subtitle").takeIf { it.startsWith("http") }?.let {
+            subtitleList.add(Track(it, "Subtitle"))
+        }
+
+        // Array of subtitle objects
+        val subtitlesRaw = obj.opt("subtitles")
+        if (subtitlesRaw is JSONArray) {
+            for (i in 0 until subtitlesRaw.length()) {
+                val sub = subtitlesRaw.optJSONObject(i) ?: continue
+                val file = sub.optString("file").takeIf { it.isNotEmpty() } ?: continue
+                val label = sub.optString("label")
+                    .ifEmpty { sub.optString("language", "Subtitle") }
+                    .ifEmpty { "Subtitle" }
+                val lang = sub.optString("lang").ifEmpty { label }
+                subtitleList.add(Track(file, lang))
+            }
+        }
+
+        // Some APIs return "tracks" array (HLS-style) with kind=captions/subtitles
+        val tracksRaw = obj.opt("tracks")
+        if (tracksRaw is JSONArray) {
+            for (i in 0 until tracksRaw.length()) {
+                val track = tracksRaw.optJSONObject(i) ?: continue
+                val kind = track.optString("kind").lowercase()
+                if (kind.contains("caption") || kind.contains("subtitle")) {
+                    val file = track.optString("file").takeIf { it.isNotEmpty() } ?: continue
+                    val label = track.optString("label", "English")
+                    subtitleList.add(Track(file, label))
                 }
             }
         }
 
-        throw Exception("No valid m3u8 found in sources")
+        return subtitleList
     }
 
     private suspend fun fetchSourcesFromPage(
@@ -836,7 +878,7 @@ class Anikoto(
 
                     if (variantUrl != null) {
                         val quality = "$displayName - $qualityName"
-                        videos.add(Video(variantUrl, quality, variantUrl, vidHeaders))
+                        videos.add(Video(variantUrl, quality, variantUrl, vidHeaders, subtitleTracks = subtitleList))
                     }
                 }
                 i++
@@ -844,7 +886,7 @@ class Anikoto(
 
             // If no variants found, treat the URL as a single direct stream
             if (videos.isEmpty()) {
-                videos.add(Video(m3u8Url, "$displayName - Auto", m3u8Url, vidHeaders))
+                videos.add(Video(m3u8Url, "$displayName - Auto", m3u8Url, vidHeaders, subtitleTracks = subtitleList))
             }
 
             videos
